@@ -2,7 +2,7 @@
   "ImageId": "ami-0bbe6b35405ecebdb",
   "KeyName": "atg_oregon",
   "SecurityGroupIds": [ "sg-6cfc2509" ],
-  "InstanceType": "t3a.medium",
+  "InstanceType": "t3a.large",
   "Placement": {
     "AvailabilityZone": "us-west-2d"
   },
