@@ -1,4 +1,4 @@
-#aws ec2 request-spot-instances --spot-price "0.0115" --instance-count 1 --type "one-time" --launch-specification file://spec.json
+# Request to start spot instance according to settings in spec.json, and print instance ID when it is up
 
 REQ_ID=$(aws ec2 request-spot-instances --spot-price "0.0226" --instance-count 1 --type "persistent" --launch-specification file://spec.json --output="text" --query="SpotInstanceRequests[*].SpotInstanceRequestId")
 
