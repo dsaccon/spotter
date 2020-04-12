@@ -71,9 +71,12 @@ then
     STATE=${str##*:}
 
     INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
-    if [ "$STATE" != running ]; then
+    if [ "$STATE" == stopped ]; then
         echo 'Instance not currently running. Starting it.. May take 1-2 mins'
         multipass exec $VM_NAME -- ./spotter/start.sh $INST_ID
+    elif [ "$STATE" == stopping ]; then
+        echo 'Instance not fully stopped. Please wait a couple minutes for it to completely shut down'
+        exit 1
     fi
 
     multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --output=text --query "Reservations[*].Instances[*].PublicDnsName"
