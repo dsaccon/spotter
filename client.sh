@@ -106,4 +106,5 @@ else
     echo '    --login    (Login to spot instance)'
     echo '    --stop     (Stop spot instance when you are finished with it)'
     echo '    --getaddr  (Get public DNS address of running instance)'
+    echo '    --update   (Update to latest version of this client and supporting libraries. IN PROGRESS)'
 fi
