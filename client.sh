@@ -93,10 +93,17 @@ then
     multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --output=text --query "Reservations[*].Instances[*].PublicDnsName"
     multipass exec $VM_NAME -- ./spotter/stop.sh $INST_ID
 
+elif [ "$1" == --getaddr ]; then
+    str=$(multipass ls --format csv | tail -1)
+    VM_NAME="${str%%,*}"
+    INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
+    IP_ADDR=$(multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --query "Reservations[*].Instances[*].PublicDnsName" --output=text)
+    echo 'Public DNS: '$IP_ADDR
 else
     echo 'This tool automates logins to spot instances that change over time'
     echo 'Run the script with the appropriate argument below. If this is your first time, use --setup:'
-    echo "    --setup  (One-time initial setup, ie './client --setup')"
-    echo '    --login  (Login to spot instance)'
-    echo '    --stop   (Stop spot instance when you are finished with it)'
+    echo "    --setup    (One-time initial setup, ie './client --setup')"
+    echo '    --login    (Login to spot instance)'
+    echo '    --stop     (Stop spot instance when you are finished with it)'
+    echo '    --getaddr  (Get public DNS address of running instance)'
 fi
