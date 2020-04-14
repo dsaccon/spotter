@@ -67,8 +67,10 @@ if [ "$1" == --setup ]; then
     multipass exec $VM_NAME -- cd spotter
 
     PEMFILE='atg_oregon.pem'
-    multipass transfer "$KB_PATH$PEMFILE $VM_NAME:/home/ubuntu/$PEMFILE"
-    multipass exec "$VM_NAME -- chmod 600 /home/ubuntu/$PEMFILE"
+    STR="$KB_PATH$PEMFILE $VM_NAME:/home/ubuntu/$PEMFILE"
+    multipass transfer $STR
+    STR="$VM_NAME -- chmod 600 /home/ubuntu/$PEMFILE"
+    multipass exec $STR
 
     echo 'Spot instance successfull set up. You can now log in (i.e. run script again with --login argument)'
 
