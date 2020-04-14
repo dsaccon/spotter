@@ -66,8 +66,9 @@ if [ "$1" == --setup ]; then
     multipass exec $VM_NAME -- git clone https://github.com/sirdavealot/spotter.git
     multipass exec $VM_NAME -- cd spotter
 
-    multipass transfer /Volumes/Keybase/team/atg_and_obt/atg_oregon.pem $VM_NAME:/home/ubuntu/atg_oregon.pem
-    multipass exec $VM_NAME -- chmod 600 /home/ubuntu/atg_oregon.pem
+    PEMFILE='atg_oregon.pem'
+    multipass transfer "$KB_PATH$PEMFILE $VM_NAME:/home/ubuntu/$PEMFILE"
+    multipass exec "$VM_NAME -- chmod 600 /home/ubuntu/$PEMFILE"
 
     echo 'Spot instance successfull set up. You can now log in (i.e. run script again with --login argument)'
 
