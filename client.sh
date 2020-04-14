@@ -12,11 +12,16 @@ if [ "$1" == --setup ]; then
     echo ''
 
     # Install multipass if not already installed
-    str=`multipass 2> /dev/null || echo uninstalled`
-    if [ "$str" == uninstalled ]; then
-        brew update
-        brew cask install multipass
-        sleep 10
+    str=`command -v multipass`
+    if [ "$str" == '']; then
+        os=`uname`
+        if [ "$os" == 'Darwin' ]; then
+            brew update
+            brew cask install multipass
+            sleep 10
+        if [ "$os" == 'Linux' ]; then
+            sudo snap install multipass --classic
+            sleep 5
     fi
 
     # Clean up any old VMs
@@ -98,6 +103,13 @@ elif [ "$1" == --getaddr ]; then
     echo 'Public DNS: '$IP_ADDR
 elif [ "$1" == --getaddr ]; then
     echo 'Feature not yet available'
+elif [ "$1" == --status ]; then
+    str=$(multipass ls --format csv | tail -1)
+    VM_NAME="${str%%,*}"
+    str=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].State")
+    str=`echo $str | tr " " :`
+    STATE=${str##*:}
+    echo $STATE
 else
     echo 'This tool automates logins to spot instances that change over time'
     echo 'Run the script with the appropriate argument below. If this is your first time, use --setup:'
@@ -105,5 +117,6 @@ else
     echo '    --login    (Login to spot instance)'
     echo '    --stop     (Stop spot instance when you are finished with it)'
     echo '    --getaddr  (Get public DNS address of running instance)'
-    echo '    --update   (Update to latest version of this client and supporting libraries. IN PROGRESS)'
+    echo '    --update   (Update to latest version of this client and supporting libraries. WORK IN PROGRESS)'
+    echo '    --status   (Check if the instance is up/down)'
 fi
