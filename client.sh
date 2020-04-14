@@ -19,9 +19,10 @@ if [ "$1" == --setup ]; then
             brew update
             brew cask install multipass
             sleep 10
-        if [ "$os" == 'Linux' ]; then
+        elif [ "$os" == 'Linux' ]; then
             sudo snap install multipass --classic
             sleep 5
+        fi
     fi
 
     # Clean up any old VMs
