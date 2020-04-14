@@ -13,13 +13,13 @@ if [ "$1" == --setup ]; then
 
     # Install multipass if not already installed
     str=`command -v multipass`
-    if [ "$str" == '']; then
-        os=`uname`
-        if [ "$os" == 'Darwin' ]; then
+    OS=`uname`
+    if [ "$str" == '' ]; then
+        if [ "$OS" == 'Darwin' ]; then
             brew update
             brew cask install multipass
             sleep 10
-        elif [ "$os" == 'Linux' ]; then
+        elif [ "$OS" == 'Linux' ]; then
             sudo snap install multipass --classic
             sleep 5
         fi
@@ -35,7 +35,13 @@ if [ "$1" == --setup ]; then
     multipass exec $VM_NAME -- sudo apt update
     multipass exec $VM_NAME -- sudo apt install -y awscli
 
-    CREDS=$(tail -1 /Volumes/Keybase/team/atg_and_obt/atg_aws_cli.csv)
+    KEYFILE='atg_aws_cli.csv'
+    if [ "$OS" == 'Darwin' ]; then
+        KB_PATH='/Volumes/Keybase/team/atg_and_obt/'
+    elif [ "$OS" == 'Linux' ]; then
+        KB_PATH='/keybase/team/atg_and_obt/'
+    fi
+    CREDS=$(tail -1 $KB_PATH$KEYFILE)
     rem=$CREDS
     KEY="${rem%%,*}"; rem="${rem#*,}"
     SECRET="${rem%%,*}"
