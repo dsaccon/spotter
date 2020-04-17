@@ -71,8 +71,8 @@ if [ "$1" == --setup ]; then
     multipass transfer $STR
     STR="$VM_NAME -- chmod 600 /home/ubuntu/$PEMFILE"
     multipass exec $STR
-
-    echo 'Spot instance successfull set up. You can now log in (i.e. run script again with --login argument)'
+    echo ''
+    echo 'Client successfully set up. You can now log in (i.e. run with --login arg)'
 
 elif [ "$1" == --login ]; then
     str=$(multipass ls --format csv | tail -1)
@@ -111,8 +111,6 @@ elif [ "$1" == --getaddr ]; then
     INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
     IP_ADDR=$(multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --query "Reservations[*].Instances[*].PublicDnsName" --output=text)
     echo 'Public DNS: '$IP_ADDR
-elif [ "$1" == --getaddr ]; then
-    echo 'Feature not yet available'
 elif [ "$1" == --status ]; then
     str=$(multipass ls --format csv | tail -1)
     VM_NAME="${str%%,*}"
