@@ -30,11 +30,12 @@ if [ "$1" == --setup ]; then
     multipass delete --all
     multipass purge
 
-    # Launch new VM, install AWS CLI, and download utility scripts from github
+    # Launch new VM install AWS CLI, and download utility scripts from github
     multipass launch --name $VM_NAME
     multipass exec $VM_NAME -- sudo apt update
     multipass exec $VM_NAME -- sudo apt install -y awscli
 
+    # Install AWS CLI in VM
     KEYFILE='atg_aws_cli.csv'
     if [ "$OS" == 'Darwin' ]; then
         KB_PATH='/Volumes/Keybase/team/atg_and_obt/'
@@ -83,10 +84,22 @@ elif [ "$1" == --login ]; then
     str=`echo $str | tr " " :`
     STATE=${str##*:}
 
+    OS=`uname`
+    KEYFILE='keys.txt'
+    if [ "$OS" == 'Darwin' ]; then
+        KB_PATH='/Volumes/Keybase/team/atg_and_obt/'
+    elif [ "$OS" == 'Linux' ]; then
+        KB_PATH='/keybase/team/atg_and_obt/'
+    fi
+    _KEY=$(grep -A2 '# OBT AWS' "$KB_PATH$KEYFILE" | tail -1)
+    _SECRET=$(grep -A3 '# OBT AWS' "$KB_PATH$KEYFILE" | tail -1)
+    KEY="${_KEY#*=}"
+    SECRET="${_SECRET#*=}"
+
     INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
     if [ "$STATE" == stopped ]; then
         echo 'Instance not currently running. Starting it.. May take 1-2 mins'
-        multipass exec $VM_NAME -- ./spotter/start.sh $INST_ID
+        multipass exec $VM_NAME -- ./spotter/start.sh $INST_ID $KEY $SECRET
     elif [ "$STATE" == stopping ]; then
         echo 'Instance not fully stopped. Please wait a couple minutes for it to completely shut down'
         exit 1
@@ -111,6 +124,7 @@ elif [ "$1" == --getaddr ]; then
     INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
     IP_ADDR=$(multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --query "Reservations[*].Instances[*].PublicDnsName" --output=text)
     echo 'Public DNS: '$IP_ADDR
+
 elif [ "$1" == --status ]; then
     str=$(multipass ls --format csv | tail -1)
     VM_NAME="${str%%,*}"
@@ -118,6 +132,7 @@ elif [ "$1" == --status ]; then
     str=`echo $str | tr " " :`
     STATE=${str##*:}
     echo $STATE
+
 else
     echo 'This tool automates logins to spot instances that change over time'
     echo 'Run the script with the appropriate argument below. If this is your first time, use --setup:'
