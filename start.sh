@@ -21,8 +21,6 @@ IP_ADDR=$(aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID 
 #SECRET="${_SECRET#*=}"
 
 CMD="sleep 2;
-    tmux send-keys -t '=system:0.right' 'pipenv shell' Enter; \
-    sleep 2; \
     tmux send-keys -t '=system:0.left' 'pipenv shell' Enter; \
     sleep 2; \
     tmux send-keys -t '=system:0.left' 'sudo docker start influxdb' Enter; \
@@ -31,6 +29,7 @@ CMD="sleep 2;
     tmux send-keys -t '=system:0.left' 'export AWS_S3_KEY='$2 Enter; \
     tmux send-keys -t '=system:0.left' 'export AWS_S3_SECRET='$3 Enter; \
     tmux send-keys -t '=system:0.left' 'python backtest_server.py' Enter; \
+    tmux send-keys -t '=system:0.right' 'pipenv shell' Enter; \
     sleep 2; \
     tmux send-keys -t '=backtesting:0.left' 'pipenv shell' Enter; \
     sleep 2; \
