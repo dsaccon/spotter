@@ -11,3 +11,7 @@ IP_ADDR=$(aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID 
 CMD="~/sharpe/sharpe/datamgmt/bt_spot_init.sh $2 $3"
 
 ssh -t -i ~/atg_oregon.pem -o StrictHostKeyChecking=no ubuntu@$IP_ADDR $CMD
+
+echo ''
+echo 'Instance public DNS: '$IP_ADDR
+echo ''
