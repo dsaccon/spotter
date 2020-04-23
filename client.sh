@@ -199,6 +199,13 @@ elif [ "$1" == --login ]; then
     multipass exec $VM_NAME -- ./spotter/login.sh $INST_ID
 
 elif [ "$1" == --stop ]; then
+    read -p 'Please confirm before stopping the instance (Y/N) ' conf
+    if [[ $conf == Y* ]] || [[ $conf == y* ]]; then
+        echo ''
+    else
+        echo ''
+        exit 1
+    fi
     str=$(multipass ls --format csv | tail -1)
     VM_NAME="${str%%,*}"
 
