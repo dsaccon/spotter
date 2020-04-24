@@ -1,5 +1,5 @@
-# Desktop client. Uses multipass to spin up an Ubuntu VM to act as a jump server for logging into the server
-# AWS CLI and necessary scripts are installed on the server to enable dynamically calling for instance ID, instance DNS address etc..
+# Desktop client. Uses multipass to spin up an Ubuntu VM to act as a jump server for logging into spot instance
+# AWS CLI and necessary scripts are installed on the VM to enable dynamically calling for instance ID, instance DNS address etc..
 
 install() {
     echo ''
@@ -62,12 +62,7 @@ start() {
         KEY=$(cat $KB_PATH$GRAFANA_KEYFILE)
         IP_ADDR_INFLUXDB=http://$IP_ADDR:8086
         GRAFANA_URL='http://grafana.atgtrading.co:3000/api/datasources/14'
-#        curl -X PUT -H "Authorization: Bearer eyJrIjoiZTcxRmw1UnI3VkFJOVFUVjRiR2twUHBZWDRBRUxJTDciLCJuIjoiZ3JhZmFuYV9hcGlfYWRtaW4iLCJpZCI6MX0=" -d "name=InfluxDB (Backtesting)&type=influxdb&access=proxy" http://grafana.atgtrading.co:3000/api/datasources/14
-#        curl -X PUT -H "Authorization: Bearer $KEY" -d "url=$IP_ADDR&type=influxdb&access=proxy" http://grafana.atgtrading.co:3000/api/datasources/14
         curl -X PUT -H "Authorization: Bearer $KEY" -d "name=InfluxDB (Backtesting)&url=$IP_ADDR_INFLUXDB&type=influxdb&access=proxy" $GRAFANA_URL > /dev/null 2>&1
-#        echo ''
-#        echo 'Instance public DNS: '$IP_ADDR
-#        echo ''
     elif [ "$STATE" == stopping ]; then
         echo 'Instance not fully stopped. Please wait a couple minutes for it to completely shut down'
         exit 1
@@ -93,16 +88,6 @@ if [ "$1" == --setup ]; then
     OS=`uname`
     if [ "$str" == '' ]; then
         install $OS
-#        echo 'Installing.. The process will take a few mins'
-#        echo ''
-#        if [ "$OS" == 'Darwin' ]; then
-#            brew update
-#            brew cask install multipass
-#            sleep 10
-#        elif [ "$OS" == 'Linux' ]; then
-#            sudo snap install multipass --classic
-#            sleep 5
-#        fi
     else
         read -p 'The app is already installed on your PC. Do you want to reinstall it with the latest version? (Y/N) ' conf
         if [[ $conf == Y* ]] || [[ $conf == y* ]]; then
@@ -177,31 +162,6 @@ elif [ "$1" == --login ]; then
     VM_NAME="${str%%,*}"
 
     start $VM_NAME
-#    # Check if instance is up. If not, start it
-#    str=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].State")
-#    str=`echo $str | tr " " :`
-#    STATE=${str##*:}
-#
-#    OS=`uname`
-#    KEYFILE='keys.txt'
-#    if [ "$OS" == 'Darwin' ]; then
-#        KB_PATH='/Volumes/Keybase/team/atg_and_obt/'
-#    elif [ "$OS" == 'Linux' ]; then
-#        KB_PATH='/keybase/team/atg_and_obt/'
-#    fi
-#    _KEY=$(grep -A2 '# OBT AWS' "$KB_PATH$KEYFILE" | tail -1)
-#    _SECRET=$(grep -A3 '# OBT AWS' "$KB_PATH$KEYFILE" | tail -1)
-#    KEY="${_KEY#*=}"
-#    SECRET="${_SECRET#*=}"
-#
-#    INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
-#    if [ "$STATE" == stopped ]; then
-#        echo 'Instance not currently running. Starting it.. May take 1-2 mins'
-#        multipass exec $VM_NAME -- ./spotter/start.sh $INST_ID $KEY $SECRET
-#    elif [ "$STATE" == stopping ]; then
-#        echo 'Instance not fully stopped. Please wait a couple minutes for it to completely shut down'
-#        exit 1
-#    fi
 
     multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --output=text --query "Reservations[*].Instances[*].PublicDnsName"
     echo 'SSHing into instance.. Type <exit> anytime to return to your regular shell'
