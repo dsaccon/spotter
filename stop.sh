@@ -8,4 +8,6 @@ fi
 
 export INST_ID=$1
 
-aws ec2 stop-instances --instance-ids $INST_ID 2> /dev/null
+aws ec2 stop-instances --instance-ids $INST_ID > /dev/null 2>&1
+
+echo 'Instanced stopped'
