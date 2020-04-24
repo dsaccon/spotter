@@ -1,8 +1,12 @@
 # Pass in instance ID as first arg when running script
 export INST_ID=$1
-aws ec2 start-instances --instance-ids $INST_ID
+RESP="x"$(aws ec2 start-instances --instance-ids $INST_ID)
 
-echo Waiting for spot instance to start up...
+if [[ $RESP == 'x' ]]; then
+    exit 1
+fi
+
+echo 'Waiting for spot instance to start up. Should take approx 30s'
 aws ec2 wait instance-running --instance-ids $INST_ID
 sleep 10
 
@@ -15,3 +19,4 @@ ssh -t -i ~/atg_oregon.pem -o StrictHostKeyChecking=no ubuntu@$IP_ADDR $CMD
 echo ''
 echo 'Instance public DNS: '$IP_ADDR
 echo ''
+exit 0
