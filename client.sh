@@ -51,10 +51,20 @@ start() {
 
     INST_ID=$(multipass exec $1 -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
     if [ "$STATE" == stopped ]; then
-        echo 'Instance not currently running. Starting it.. May take 1-2 mins'
         multipass exec $1 -- ./spotter/start.sh $INST_ID $KEY $SECRET
-#        INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
-#        IP_ADDR=$(multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --query "Reservations[*].Instances[*].PublicDnsName" --output=text)
+        if [ $? -eq 1 ]; then
+            echo ''
+            echo 'Instance not yet ready to start. Please wait 1-2 more mins'
+            exit 1
+        fi
+        IP_ADDR=$(multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --query "Reservations[*].Instances[*].PublicDnsName" --output=text)
+        GRAFANA_KEYFILE='grafana_api_key'
+        KEY=$(cat $KB_PATH$GRAFANA_KEYFILE)
+        IP_ADDR_INFLUXDB=http://$IP_ADDR:8086
+        GRAFANA_URL='http://grafana.atgtrading.co:3000/api/datasources/14'
+#        curl -X PUT -H "Authorization: Bearer eyJrIjoiZTcxRmw1UnI3VkFJOVFUVjRiR2twUHBZWDRBRUxJTDciLCJuIjoiZ3JhZmFuYV9hcGlfYWRtaW4iLCJpZCI6MX0=" -d "name=InfluxDB (Backtesting)&type=influxdb&access=proxy" http://grafana.atgtrading.co:3000/api/datasources/14
+#        curl -X PUT -H "Authorization: Bearer $KEY" -d "url=$IP_ADDR&type=influxdb&access=proxy" http://grafana.atgtrading.co:3000/api/datasources/14
+        curl -X PUT -H "Authorization: Bearer $KEY" -d "name=InfluxDB (Backtesting)&url=$IP_ADDR_INFLUXDB&type=influxdb&access=proxy" $GRAFANA_URL > /dev/null 2>&1
 #        echo ''
 #        echo 'Instance public DNS: '$IP_ADDR
 #        echo ''
@@ -62,7 +72,7 @@ start() {
         echo 'Instance not fully stopped. Please wait a couple minutes for it to completely shut down'
         exit 1
     elif [ "$STATE" == running ]; then
-        echo 'Instance already running'
+        echo 'Instance is running'
     fi
 
 }
@@ -230,14 +240,12 @@ elif [ "$1" == --status ]; then
 
 else
     echo ''
-    echo 'This tool automates logins to dynamic spot instances'
-    echo 'Run with the appropriate argument below. If this is your first time, or you want to upgrade to the latest version, use --setup:'
+    echo 'Tool for managing spot instance. Run with the following args:'
     echo "    --setup    (Install app on your PC, or reinstall from scratch if already installed. Ie, './client --setup')"
     echo '    --start    (Start spot instance)'
-    echo '    --login    (Login to spot instance)'
-    echo '    --stop     (Stop spot instance when you are finished with it)'
+    echo '    --login    (Login to spot instance shell. Will auto start instance if it is down)'
+    echo '    --stop     (Stop spot instance)'
     echo '    --getaddr  (Get public DNS address of running instance)'
-    echo '    --update   (Update to latest version of this client and supporting libraries. WORK IN PROGRESS)'
-    echo '    --status   (Check if the instance is up/down)'
+    echo '    --status   (Check if the instance is running/stopped/stopping)'
     echo ''
 fi
