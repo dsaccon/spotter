@@ -147,6 +147,10 @@ if [ "$1" == --setup ]; then
     multipass transfer $STR
     STR="$VM_NAME -- chmod 600 /home/ubuntu/$PEMFILE"
     multipass exec $STR
+
+    multipass copy-files $VM_NAME:/home/ubuntu/spotter/client.sh spot_client.sh
+    chmod +x spot_client.sh
+
     echo ''
     echo 'Client successfully set up. You can now log in to the spot instance (i.e. run client with --login arg)'
     echo ''
