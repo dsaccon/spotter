@@ -29,6 +29,17 @@ uninstall() {
     fi
 }
 
+check_VM() {
+    str=$(multipass ls --format csv | tail -1)
+    _str=${str#*,}
+    STATE=${_str%%,*}
+    if [ "$STATE" != "Running" ]; then
+        VM_NAME="${str%%,*}"
+        OS=`uname`
+        multipass start $VM_NAME
+    fi
+}
+
 start() {
     # Takes one argument, for name of VM (e.g. 'spot-jump-923')
 
@@ -76,10 +87,6 @@ start() {
 #
 ### Main ###
 #
-RANGE=999
-num=$RANDOM
-let "num %= $RANGE"
-VM_NAME="spot-jump-"$num
 
 if [ "$1" == --setup ]; then
 
@@ -89,6 +96,13 @@ if [ "$1" == --setup ]; then
     if [ "$str" == '' ]; then
         install $OS
     else
+        if [ "$OS" == 'Darwin' ]; then
+            STATUS=$(brew cask outdated | grep multipass)
+            if [ "$STATUS" == '' ]; then
+                brew cask upgrade multipass
+            fi
+        #elif [ "$OS" == 'Linux' ]; then
+        fi
         read -p 'The app is already installed on your PC. Do you want to reinstall it with the latest version? (Y/N) ' conf
         if [[ $conf == Y* ]] || [[ $conf == y* ]]; then
             uninstall $OS
@@ -106,6 +120,10 @@ if [ "$1" == --setup ]; then
     multipass purge
 
     # Launch new VM install AWS CLI, and download utility scripts from github
+    RANGE=999
+    num=$RANDOM
+    let "num %= $RANGE"
+    VM_NAME="spot-jump-"$num
     multipass launch --name $VM_NAME
     multipass exec $VM_NAME -- sudo apt update
     multipass exec $VM_NAME -- sudo apt install -y awscli
@@ -156,12 +174,14 @@ if [ "$1" == --setup ]; then
     echo ''
 
 elif [ "$1" == --start ]; then
+    check_VM
     str=$(multipass ls --format csv | tail -1)
     VM_NAME="${str%%,*}"
 
     start $VM_NAME
 
 elif [ "$1" == --login ]; then
+    check_VM
     str=$(multipass ls --format csv | tail -1)
     VM_NAME="${str%%,*}"
 
@@ -173,6 +193,7 @@ elif [ "$1" == --login ]; then
     multipass exec $VM_NAME -- ./spotter/login.sh $INST_ID
 
 elif [ "$1" == --stop ]; then
+    check_VM
     read -p 'Please confirm before stopping the instance (Y/N) ' conf
     if [[ $conf == Y* ]] || [[ $conf == y* ]]; then
         echo ''
@@ -188,6 +209,7 @@ elif [ "$1" == --stop ]; then
     multipass exec $VM_NAME -- ./spotter/stop.sh $INST_ID
 
 elif [ "$1" == --getaddr ]; then
+    check_VM
     str=$(multipass ls --format csv | tail -1)
     VM_NAME="${str%%,*}"
     INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
@@ -195,6 +217,7 @@ elif [ "$1" == --getaddr ]; then
     echo 'Instance public DNS: '$IP_ADDR
 
 elif [ "$1" == --status ]; then
+    check_VM
     str=$(multipass ls --format csv | tail -1)
     VM_NAME="${str%%,*}"
     str=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].State")
