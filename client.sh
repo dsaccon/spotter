@@ -101,7 +101,8 @@ if [ "$1" == --setup ]; then
             if [ "$STATUS" == '' ]; then
                 brew cask upgrade multipass
             fi
-        #elif [ "$OS" == 'Linux' ]; then
+        elif [ "$OS" == 'Linux' ]; then
+            sudo snap refresh multipass
         fi
         read -p 'The app is already installed on your PC. Do you want to reinstall it with the latest version? (Y/N) ' conf
         if [[ $conf == Y* ]] || [[ $conf == y* ]]; then
