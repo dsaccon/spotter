@@ -55,14 +55,20 @@ start() {
     elif [ "$OS" == 'Linux' ]; then
         KB_PATH='/keybase/team/atg_and_obt/'
     fi
+
     _KEY=$(grep -A2 '# OBT AWS' "$KB_PATH$KEYFILE" | tail -1)
     _SECRET=$(grep -A3 '# OBT AWS' "$KB_PATH$KEYFILE" | tail -1)
-    KEY="${_KEY#*=}"
-    SECRET="${_SECRET#*=}"
+    S3_KEY="${_KEY#*=}"
+    S3_SECRET="${_SECRET#*=}"
+
+    _KEY=$(grep -A3 '# ATG AWS' "$KB_PATH$KEYFILE" | tail -1)
+    _SECRET=$(grep -A4 '# ATG AWS' "$KB_PATH$KEYFILE" | tail -1)
+    EC2_KEY="${_KEY#*=}"
+    EC2_SECRET="${_SECRET#*=}"
 
     INST_ID=$(multipass exec $1 -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
     if [ "$STATE" == stopped ]; then
-        multipass exec $1 -- ./spotter/start.sh $INST_ID $KEY $SECRET
+        multipass exec $1 -- ./spotter/start.sh $INST_ID $S3_KEY $S3_SECRET $EC2_KEY $EC2_SECRET
         if [ $? -eq 1 ]; then
             echo ''
             echo 'Instance not yet ready to start. Please wait 1-2 more mins'
@@ -70,10 +76,10 @@ start() {
         fi
         IP_ADDR=$(multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --query "Reservations[*].Instances[*].PublicDnsName" --output=text)
         GRAFANA_KEYFILE='grafana_api_key'
-        KEY=$(cat $KB_PATH$GRAFANA_KEYFILE)
+        GRAFANA_KEY=$(cat $KB_PATH$GRAFANA_KEYFILE)
         IP_ADDR_INFLUXDB=http://$IP_ADDR:8086
         GRAFANA_URL='http://grafana.atgtrading.co:3000/api/datasources/14'
-        curl -X PUT -H "Authorization: Bearer $KEY" -d "name=InfluxDB (Backtesting)&url=$IP_ADDR_INFLUXDB&type=influxdb&access=proxy" $GRAFANA_URL > /dev/null 2>&1
+        curl -X PUT -H "Authorization: Bearer $GRAFANA_KEY" -d "name=InfluxDB (Backtesting)&url=$IP_ADDR_INFLUXDB&type=influxdb&access=proxy" $GRAFANA_URL > /dev/null 2>&1
     elif [ "$STATE" == stopping ]; then
         echo 'Instance not fully stopped. Please wait a couple minutes for it to completely shut down'
         exit 1
