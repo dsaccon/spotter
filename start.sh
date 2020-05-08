@@ -12,7 +12,7 @@ sleep 10
 
 IP_ADDR=$(aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --query "Reservations[*].Instances[*].PublicDnsName" --output=text)
 
-CMD="~/sharpe/sharpe/datamgmt/bt_spot_init.sh $2 $3"
+CMD="~/sharpe/sharpe/datamgmt/bt_spot_init.sh $2 $3 $4 $5"
 
 ssh -t -i ~/atg_oregon.pem -o StrictHostKeyChecking=no ubuntu@$IP_ADDR $CMD
 
