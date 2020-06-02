@@ -40,6 +40,28 @@ check_VM() {
     fi
 }
 
+check_VM_status() {
+        # Check if VM exists and is up/down. Start VM if it is down
+        str=$(multipass ls --format csv | tail -1)
+        if [[ $str == *"spot-jump"* ]]; then
+           VM_NAME="${str%%,*}"
+           if [[ $str == *"Running"* ]]; then
+               echo $VM_NAME > /dev/null 2>&1
+           elif [[ $str == *"Stopped"* ]]; then
+               echo "VM was down. Wait a few secs for it to start"
+               multipass start $VM_NAME
+               echo $VM_NAME > /dev/null 2>&1
+           else
+               multipass stop $VM_NAME
+               echo "VM in an unknown state. Please try again. If problem persists, reinstall by running client with --setup arg"
+               echo ""
+           fi
+        else
+           echo "No VM present. Re-run spot client with --setup arg"
+           echo ""
+        fi
+}
+
 start() {
     # Takes one argument, for name of VM (e.g. 'spot-jump-923')
 
@@ -181,16 +203,18 @@ if [ "$1" == --setup ]; then
     echo ''
 
 elif [ "$1" == --start ]; then
-    check_VM
-    str=$(multipass ls --format csv | tail -1)
-    VM_NAME="${str%%,*}"
+#    check_VM
+#    str=$(multipass ls --format csv | tail -1)
+#    VM_NAME="${str%%,*}"
+    check_VM_status VM_NAME
 
     start $VM_NAME
 
 elif [ "$1" == --login ]; then
-    check_VM
-    str=$(multipass ls --format csv | tail -1)
-    VM_NAME="${str%%,*}"
+#    check_VM
+#    str=$(multipass ls --format csv | tail -1)
+#    VM_NAME="${str%%,*}"
+    check_VM_status VM_NAME
 
     start $VM_NAME
 
@@ -200,7 +224,7 @@ elif [ "$1" == --login ]; then
     multipass exec $VM_NAME -- ./spotter/login.sh $INST_ID
 
 elif [ "$1" == --stop ]; then
-    check_VM
+#    check_VM
     read -p 'Please confirm before stopping the instance (Y/N) ' conf
     if [[ $conf == Y* ]] || [[ $conf == y* ]]; then
         echo ''
@@ -208,25 +232,28 @@ elif [ "$1" == --stop ]; then
         echo ''
         exit 1
     fi
-    str=$(multipass ls --format csv | tail -1)
-    VM_NAME="${str%%,*}"
+#    str=$(multipass ls --format csv | tail -1)
+#    VM_NAME="${str%%,*}"
+    check_VM_status VM_NAME
 
     INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
     multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --output=text --query "Reservations[*].Instances[*].PublicDnsName"
     multipass exec $VM_NAME -- ./spotter/stop.sh $INST_ID
 
 elif [ "$1" == --getaddr ]; then
-    check_VM
-    str=$(multipass ls --format csv | tail -1)
-    VM_NAME="${str%%,*}"
+#    check_VM
+#    str=$(multipass ls --format csv | tail -1)
+#    VM_NAME="${str%%,*}"
+    check_VM_status VM_NAME
     INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
     IP_ADDR=$(multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --query "Reservations[*].Instances[*].PublicDnsName" --output=text)
     echo 'Instance public DNS: '$IP_ADDR
 
 elif [ "$1" == --status ]; then
-    check_VM
-    str=$(multipass ls --format csv | tail -1)
-    VM_NAME="${str%%,*}"
+#    check_VM
+#    str=$(multipass ls --format csv | tail -1)
+#    VM_NAME="${str%%,*}"
+    check_VM_status VM_NAME
     str=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].State")
     str=`echo $str | tr " " :`
     STATE=${str##*:}
