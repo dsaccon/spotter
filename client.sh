@@ -158,7 +158,7 @@ if [ "$1" == --setup ]; then
     multipass exec $VM_NAME -- sudo apt install -y awscli
 
     # Install AWS CLI in VM
-    KEYFILE='atg_aws_cli.csv'
+    KEYFILE='atg2_aws_cli.csv'
     if [ "$OS" == 'Darwin' ]; then
         KB_PATH='/Volumes/Keybase/team/atg_and_obt/'
     elif [ "$OS" == 'Linux' ]; then
@@ -189,7 +189,7 @@ if [ "$1" == --setup ]; then
     multipass exec $VM_NAME -- git clone https://github.com/sirdavealot/spotter.git
     multipass exec $VM_NAME -- cd spotter
 
-    PEMFILE='atg_oregon.pem'
+    PEMFILE='atg2_oregon.pem'
     STR="$KB_PATH$PEMFILE $VM_NAME:/home/ubuntu/$PEMFILE"
     multipass transfer $STR
     STR="$VM_NAME -- chmod 600 /home/ubuntu/$PEMFILE"
