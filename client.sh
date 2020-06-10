@@ -218,6 +218,7 @@ elif [ "$1" == --login ]; then
 
     start $VM_NAME
 
+    INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" "Name=instance-state-name,Values=running" --output=text --query="Reservations[*].Instances[*].InstanceId")
     multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --output=text --query "Reservations[*].Instances[*].PublicDnsName"
     echo 'SSHing into instance.. Type <exit> anytime to return to your regular shell'
     echo ''
@@ -236,7 +237,7 @@ elif [ "$1" == --stop ]; then
 #    VM_NAME="${str%%,*}"
     check_VM_status VM_NAME
 
-    INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
+    INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" "Name=instance-state-name,Values=running" --output=text --query="Reservations[*].Instances[*].InstanceId")
     multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --output=text --query "Reservations[*].Instances[*].PublicDnsName"
     multipass exec $VM_NAME -- ./spotter/stop.sh $INST_ID
 
@@ -245,7 +246,7 @@ elif [ "$1" == --getaddr ]; then
 #    str=$(multipass ls --format csv | tail -1)
 #    VM_NAME="${str%%,*}"
     check_VM_status VM_NAME
-    INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
+    INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" "Name=instance-state-name,Values=running" --output=text --query="Reservations[*].Instances[*].InstanceId")
     IP_ADDR=$(multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --query "Reservations[*].Instances[*].PublicDnsName" --output=text)
     echo 'Instance public DNS: '$IP_ADDR
 
