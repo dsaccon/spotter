@@ -83,8 +83,8 @@ start() {
     S3_KEY="${_KEY#*=}"
     S3_SECRET="${_SECRET#*=}"
 
-    _KEY=$(grep -A3 '# ATG AWS' "$KB_PATH$KEYFILE" | tail -1)
-    _SECRET=$(grep -A4 '# ATG AWS' "$KB_PATH$KEYFILE" | tail -1)
+    _KEY=$(grep -A3 '# ATG2 AWS' "$KB_PATH$KEYFILE" | tail -1)
+    _SECRET=$(grep -A4 '# ATG2 AWS' "$KB_PATH$KEYFILE" | tail -1)
     EC2_KEY="${_KEY#*=}"
     EC2_SECRET="${_SECRET#*=}"
 
@@ -190,8 +190,11 @@ if [ "$1" == --setup ]; then
     multipass exec $VM_NAME -- cd spotter
 
     PEMFILE='atg2_oregon.pem'
-    STR="$KB_PATH$PEMFILE $VM_NAME:/home/ubuntu/$PEMFILE"
+    cp $KB_PATH$PEMFILE _tmp.pem
+#    STR="$KB_PATH$PEMFILE $VM_NAME:/home/ubuntu/$PEMFILE"
+    STR="_tmp.pem $VM_NAME:/home/ubuntu/$PEMFILE"
     multipass transfer $STR
+    rm _tmp.pem
     STR="$VM_NAME -- chmod 600 /home/ubuntu/$PEMFILE"
     multipass exec $STR
 
