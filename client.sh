@@ -66,7 +66,7 @@ start() {
     # Takes one argument, for name of VM (e.g. 'spot-jump-923')
 
     # Check if instance is up. If not, start it
-    str=$(multipass exec $1 -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].State")
+    str=$(multipass exec $1 -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" "Name=instance-state-name,Values=running,stopped,stopping" --output=text --query="Reservations[*].Instances[*].State")
     str=`echo $str | tr " " :`
     STATE=${str##*:}
 
@@ -88,7 +88,7 @@ start() {
     EC2_KEY="${_KEY#*=}"
     EC2_SECRET="${_SECRET#*=}"
 
-    INST_ID=$(multipass exec $1 -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].InstanceId")
+    INST_ID=$(multipass exec $1 -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" "Name=instance-state-name,Values=running,stopped,stopping" --output=text --query="Reservations[*].Instances[*].InstanceId")
     if [ "$STATE" == stopped ]; then
         multipass exec $1 -- ./spotter/start.sh $INST_ID $S3_KEY $S3_SECRET $EC2_KEY $EC2_SECRET
         if [ $? -eq 1 ]; then
@@ -258,7 +258,7 @@ elif [ "$1" == --status ]; then
 #    str=$(multipass ls --format csv | tail -1)
 #    VM_NAME="${str%%,*}"
     check_VM_status VM_NAME
-    str=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" --output=text --query="Reservations[*].Instances[*].State")
+    str=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" "Name=instance-state-name,Values=running,stopped,stopping" --output=text --query="Reservations[*].Instances[*].State")
     str=`echo $str | tr " " :`
     STATE=${str##*:}
     echo $STATE
