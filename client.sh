@@ -206,17 +206,11 @@ if [ "$1" == --setup ]; then
     echo ''
 
 elif [ "$1" == --start ]; then
-#    check_VM
-#    str=$(multipass ls --format csv | tail -1)
-#    VM_NAME="${str%%,*}"
     check_VM_status VM_NAME
 
     start $VM_NAME
 
 elif [ "$1" == --login ]; then
-#    check_VM
-#    str=$(multipass ls --format csv | tail -1)
-#    VM_NAME="${str%%,*}"
     check_VM_status VM_NAME
 
     start $VM_NAME
@@ -228,7 +222,6 @@ elif [ "$1" == --login ]; then
     multipass exec $VM_NAME -- ./spotter/login.sh $INST_ID
 
 elif [ "$1" == --stop ]; then
-#    check_VM
     read -p 'Please confirm before stopping the instance (Y/N) ' conf
     if [[ $conf == Y* ]] || [[ $conf == y* ]]; then
         echo ''
@@ -236,8 +229,6 @@ elif [ "$1" == --stop ]; then
         echo ''
         exit 1
     fi
-#    str=$(multipass ls --format csv | tail -1)
-#    VM_NAME="${str%%,*}"
     check_VM_status VM_NAME
 
     INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" "Name=instance-state-name,Values=running" --output=text --query="Reservations[*].Instances[*].InstanceId")
@@ -245,23 +236,30 @@ elif [ "$1" == --stop ]; then
     multipass exec $VM_NAME -- ./spotter/stop.sh $INST_ID
 
 elif [ "$1" == --getaddr ]; then
-#    check_VM
-#    str=$(multipass ls --format csv | tail -1)
-#    VM_NAME="${str%%,*}"
     check_VM_status VM_NAME
     INST_ID=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" "Name=instance-state-name,Values=running" --output=text --query="Reservations[*].Instances[*].InstanceId")
     IP_ADDR=$(multipass exec $VM_NAME -- aws ec2 describe-instances --region us-west-2 --instance-ids $INST_ID --query "Reservations[*].Instances[*].PublicDnsName" --output=text)
     echo 'Instance public DNS: '$IP_ADDR
 
 elif [ "$1" == --status ]; then
-#    check_VM
-#    str=$(multipass ls --format csv | tail -1)
-#    VM_NAME="${str%%,*}"
     check_VM_status VM_NAME
     str=$(multipass exec $VM_NAME -- aws ec2 describe-instances --filters "Name=tag:Name,Values=Backtesting_spot" "Name=instance-state-name,Values=running,stopped,stopping" --output=text --query="Reservations[*].Instances[*].State")
     str=`echo $str | tr " " :`
     STATE=${str##*:}
     echo $STATE
+
+elif [ "$1" == --update ]; then
+    OS=`uname`
+    if [ "$OS" == 'Darwin' ]; then
+        KB_PATH='/Volumes/Keybase/team/atg_and_obt/'
+    elif [ "$OS" == 'Linux' ]; then
+        KB_PATH='/keybase/team/atg_and_obt/'
+    else
+        echo 'Unknown OS on your machine. Exiting'
+        exit 1
+    fi
+    cp $KB_PATH/spot_client.sh .
+    chmod 755 spot_client.sh
 
 else
     echo ''
@@ -272,5 +270,6 @@ else
     echo '    --stop     (Stop spot instance)'
     echo '    --getaddr  (Get public DNS address of running instance)'
     echo '    --status   (Check if the instance is running/stopped/stopping)'
+    echo '    --update   (Update client to the latest version)'
     echo ''
 fi
