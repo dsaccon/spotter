@@ -100,7 +100,7 @@ start() {
         GRAFANA_KEYFILE='grafana_api_key'
         GRAFANA_KEY=$(cat $KB_PATH$GRAFANA_KEYFILE)
         IP_ADDR_INFLUXDB=http://$IP_ADDR:8086
-        GRAFANA_URL='http://grafana.atgtrading.co:3000/api/datasources/14'
+        GRAFANA_URL='http://grafana.atgtrading.co:3000/api/datasources/1'
         curl -X PUT -H "Authorization: Bearer $GRAFANA_KEY" -d "name=InfluxDB (Backtesting)&url=$IP_ADDR_INFLUXDB&type=influxdb&access=proxy" $GRAFANA_URL > /dev/null 2>&1
     elif [ "$STATE" == stopping ]; then
         echo 'Instance not fully stopped. Please wait a couple minutes for it to completely shut down'
